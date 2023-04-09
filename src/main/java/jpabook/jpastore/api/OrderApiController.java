@@ -112,6 +112,11 @@ public class OrderApiController {
         return orderQueryRepository.findOrderQueryDTOs();
     }
 
+    @GetMapping("/api/v5/orders")
+    public List<OrderQueryDTO> ordersV5() {
+        return orderQueryRepository.findAllByDTO_optimization();
+    }
+
     @Getter
     static class OrderDTO {
 

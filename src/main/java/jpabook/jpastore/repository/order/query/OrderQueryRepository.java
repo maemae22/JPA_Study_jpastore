@@ -5,6 +5,8 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -56,4 +58,51 @@ public class OrderQueryRepository {
                                 " join o.delivery d", OrderQueryDTO.class)
                 .getResultList();
     }
+
+    /**
+     * 최적화
+     * Query: 루트 1번, 컬렉션 1번
+     * 데이터를 한꺼번에 처리할 때 많이 사용하는 방식
+     */
+    public List<OrderQueryDTO> findAllByDTO_optimization() {
+
+        // 루트 조회(toOne 코드를 모두 한번에 조회)
+        List<OrderQueryDTO> result = findOrders();
+
+        List<Long> orderIds = toOrderIds(result);
+
+        // orderItem 컬렉션을 Map 한방에 조회
+        Map<Long, List<OrderItemQueryDTO>> orderItemMap = findOrderItemMap(orderIds);
+
+        // 루프를 돌면서 컬렉션 추가 (추가 쿼리 실행X)
+        result.forEach(o -> o.setOrderItems(orderItemMap.get(o.getOrderId())));
+
+        return result;
+    }
+
+    private Map<Long, List<OrderItemQueryDTO>> findOrderItemMap(List<Long> orderIds) {
+
+        List<OrderItemQueryDTO> orderItems = em.createQuery(
+                        "select new jpabook.jpastore.repository.order.query.OrderItemQueryDTO(oi.order.id, i.name, oi.orderPrice, oi.count)" +
+                                " from OrderItem oi" +
+                                " join oi.item i" +
+                                " where oi.order.id in :orderIds", OrderItemQueryDTO.class)
+                .setParameter("orderIds", orderIds)
+                .getResultList();
+
+        Map<Long, List<OrderItemQueryDTO>> orderItemMap = orderItems.stream()
+                .collect(Collectors.groupingBy(orderItemQueryDTO -> orderItemQueryDTO.getOrderId()));
+
+        return orderItemMap;
+    }
+
+    private static List<Long> toOrderIds(List<OrderQueryDTO> result) {
+
+        List<Long> orderIds = result.stream()
+                .map(o -> o.getOrderId())
+                .collect(Collectors.toList());
+
+        return orderIds;
+    }
+
 }
