@@ -3,8 +3,10 @@ package jpabook.jpastore.api;
 import jpabook.jpastore.domain.Address;
 import jpabook.jpastore.domain.Order;
 import jpabook.jpastore.domain.OrderStatus;
+import jpabook.jpastore.repository.order.simplequery.OrderSimpleQueryDTO;
 import jpabook.jpastore.repository.OrderRepository;
 import jpabook.jpastore.repository.OrderSearch;
+import jpabook.jpastore.repository.order.simplequery.OrderSimpleQueryRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,7 @@ Order -> Delivery
 public class OrderSimpleApiController {
 
     private final OrderRepository orderRepository;
+    private final OrderSimpleQueryRepository orderSimpleQueryRepository;
 
     // 이렇게 하면 안됨 !!
     /**
@@ -90,4 +93,16 @@ public class OrderSimpleApiController {
             address = order.getDelivery().getAddress(); // Lazy 초기화
         }
     }
+
+    /**
+     * V4. JPA에서 DTO로 바로 조회
+     * - 쿼리 1번 호출
+     * - select 절에서 원하는 데이터만 선택해서 조회
+     * - 단점: 리포지토리 재사용성 떨어짐, API 스펙에 맞춘 코드가 리포지토리에 들어감
+     */
+    @GetMapping("/api/v4/simple-orders")
+    public List<OrderSimpleQueryDTO> ordersV4() {
+        return orderSimpleQueryRepository.findOrderDTOs();
+    }
+
 }
