@@ -6,6 +6,8 @@ import jpabook.jpastore.domain.OrderItem;
 import jpabook.jpastore.domain.OrderStatus;
 import jpabook.jpastore.repository.OrderRepository;
 import jpabook.jpastore.repository.OrderSearch;
+import jpabook.jpastore.repository.order.query.OrderQueryDTO;
+import jpabook.jpastore.repository.order.query.OrderQueryRepository;
 import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 public class OrderApiController {
 
     private final OrderRepository orderRepository;
+    private final OrderQueryRepository orderQueryRepository;
 
     /**
      * V1. 엔티티 직접 노출
@@ -102,6 +105,11 @@ public class OrderApiController {
                 .collect(Collectors.toList());
 
         return result;
+    }
+
+    @GetMapping("/api/v4/orders")
+    public List<OrderQueryDTO> ordersV4() {
+        return orderQueryRepository.findOrderQueryDTOs();
     }
 
     @Getter
