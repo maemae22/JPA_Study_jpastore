@@ -1,3 +1,5 @@
+package jpabook.jpastore;
+
 import jpabook.jpastore.domain.*;
 import jpabook.jpastore.domain.item.Book;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ public class InitDB {
 
     @PostConstruct
     public void init() {
+
         initService.dbInit1();
         initService.dbInit2();
     }
