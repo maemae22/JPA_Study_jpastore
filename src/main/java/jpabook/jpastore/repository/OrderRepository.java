@@ -1,6 +1,8 @@
 package jpabook.jpastore.repository;
 
-import jpabook.jpastore.domain.Member;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import jpabook.jpastore.domain.*;
 import jpabook.jpastore.domain.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -26,10 +28,37 @@ public class OrderRepository {
         return em.find(Order.class, id);
     }
 
-    // 방법 2가지 : findAllByString, findAllByCriteria (하단에 있음) - QueryDSL 방법은 추후 공부 !
+    // 방법 3가지 : findAllByString, findAllByCriteria, findAll(QueryDSL)
+
+    // QueryDSL 을 활용한 동적 Query.
     public List<Order> findAll(OrderSearch orderSearch) {
-        // 추후 작성
-        return null;
+
+        JPAQueryFactory query = new JPAQueryFactory(em);
+
+        QOrder order = QOrder.order;
+        QMember member = QMember.member;
+
+        return query
+                .select(order)
+                .from(order)
+                .join(order.member, member)
+                .where(statusEq(orderSearch.getOrderStatus()), nameLike(orderSearch.getMemberName()))
+                .limit(1000)
+                .fetch();
+    }
+
+    private BooleanExpression statusEq(OrderStatus statusCond) {
+        if (statusCond == null) {
+            return null;
+        }
+        return QOrder.order.status.eq(statusCond);
+    }
+
+    private BooleanExpression nameLike(String nameCond) {
+        if (!StringUtils.hasText(nameCond)) {
+            return null;
+        }
+        return QMember.member.name.like(nameCond);
     }
 
     public List<Order> findAllByString(OrderSearch orderSearch) {
